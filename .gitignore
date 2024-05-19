@@ -1,0 +1,26 @@
+# IDE and editors
+/.idea/
+*.iml
+/workspace.xml
+.DS_Store
+
+# Python
+__pycache__/
+venv
+
+# Environment files
+.env
+
+# unused files
+/db
+/logs
+
+# Databases
+*.db
+
+# Logs
+*.log
+
+# Build artifacts
+/dist/
+/build/

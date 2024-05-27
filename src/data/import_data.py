@@ -110,5 +110,63 @@ def deactivate_missing_employees():
         ''', tuple(imported_employee_ids))
         conn.commit()
 
+def import_holiday_policies_from_api():
+    api = PeopleForceAPI()
+    holiday_policies = api.list_all_holiday_policies()
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        for policy in holiday_policies['data']:
+            cursor.execute('''
+                INSERT OR REPLACE INTO HolidayPolicies
+                (id, name, country_code, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                policy['id'],
+                policy['name'],
+                policy['country_code'],
+                datetime.strptime(policy['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                datetime.strptime(policy['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            ))
+        conn.commit()
+
+def import_all_holidays_from_api():
+    api = PeopleForceAPI()
+    page = 1
+    total_imported = 0
+
+    while True:
+        all_holidays = api.list_all_holidays(page=page)
+        if not all_holidays['data']:
+            break  # Если нет данных, выходим из цикла
+
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            for holiday in all_holidays['data']:
+                cursor.execute('''
+                    INSERT OR REPLACE INTO All_Holidays
+                    (id, name, occurs_on, starts_on, ends_on, is_working, compensated_on, observed_on, holiday_policy_id, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    holiday['id'],
+                    holiday['name'],
+                    holiday['occurs_on'],
+                    holiday['starts_on'],
+                    holiday['ends_on'],
+                    not holiday['working'],  # Преобразование working в is_working, где True означает рабочий день
+                    holiday['compensated_on'],
+                    holiday['observed_on'],
+                    holiday['holiday_policy_id'],
+                    datetime.strptime(holiday['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                    datetime.strptime(holiday['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                ))
+            conn.commit()
+        total_imported += len(all_holidays['data'])
+        page += 1  # Переход на следующую страницу
+
+    print(f"Total holidays imported: {total_imported}")
+
+
 if __name__ == '__main__':
     import_employees()
+    import_holiday_policies_from_api()
+    import_all_holidays_from_api()

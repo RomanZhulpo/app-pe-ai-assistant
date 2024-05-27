@@ -77,8 +77,8 @@ class PeopleForceAPI:
         return response.json()
 
     # List all holidays
-    def list_all_holidays(self):
-        url = f"{self.BASE_URL}/holidays"
+    def list_all_holidays(self, page=1):
+        url = f"{self.BASE_URL}/holidays?page={page}"
         logger.info(f"Requesting all holidays from {url}")
         response = requests.get(url, headers=self.headers)
         response.raise_for_status()  # Raise an error for bad status codes
@@ -88,6 +88,16 @@ class PeopleForceAPI:
     def list_company_calendar_events(self):
         url = f"{self.BASE_URL}/calendars"
         logger.info(f"Requesting company calendar events from {url}")
+        response = requests.get(url, headers=self.headers)
+        logger.debug(f"Response status code: {response.status_code}")
+        logger.debug(f"Response content: {response.content}")
+        response.raise_for_status()  # Raise an error for bad status codes
+        return response.json()
+
+     # List all holiday policies
+    def list_all_holiday_policies(self):
+        url = f"{self.BASE_URL}/holiday_policies"
+        logger.info(f"Requesting all holiday policies from {url}")
         response = requests.get(url, headers=self.headers)
         logger.debug(f"Response status code: {response.status_code}")
         logger.debug(f"Response content: {response.content}")

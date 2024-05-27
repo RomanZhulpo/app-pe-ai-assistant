@@ -17,6 +17,20 @@ logger = logging.getLogger(__name__)
 # Global variable for database path
 db_path = project_root / os.getenv("DB_PATH")
 
+class DBConnection:
+    def __init__(self):
+        self.connection = sqlite3.connect(db_path)
+        self.cursor = self.connection.cursor()
+
+    def execute(self, query):
+        return self.cursor.execute(query)
+
+    def commit(self):
+        self.connection.commit()
+
+    def close(self):
+        self.connection.close()
+
 # Create database
 def create_database():
     try:
@@ -63,7 +77,31 @@ def create_database():
                 created_at DATETIME,
                 updated_at DATETIME)
             ''')
-            
+            # Create HolidayPolicies tableåß
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS HolidayPolicies (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                country_code TEXT,
+                created_at DATETIME,
+                updated_at DATETIME)
+            ''')
+            # Create Holidays table
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS All_Holidays (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                occurs_on DATE,
+                starts_on DATE,
+                ends_on DATE,
+                is_working BOOLEAN,
+                compensated_on DATE,
+                observed_on DATE,
+                holiday_policy_id INTEGER,
+                created_at DATETIME,
+                updated_at DATETIME)
+        ''')
+
             conn.commit()
         logging.info("Database created successfully.")
     except Exception as e:

@@ -7,7 +7,8 @@ class OpenAI_API:
         load_dotenv()  # Load environment variables from .env file
         self.api_key = os.getenv('OPENAI_API_KEY')
         self.headers = {
-            'Authorization': f'Bearer {self.api_key}'
+            'Authorization': f'Bearer {self.api_key}',
+            'Content-Type': 'application/json'
         }
 
     def make_request(self, endpoint, data):
@@ -16,11 +17,11 @@ class OpenAI_API:
         response = requests.post(f'https://api.openai.com/v1/{endpoint}', headers=self.headers, json=data)
         return response.json()
 
-    def chat_completion(self, prompt, model="text-davinci-002", max_tokens=150):
+    def chat_completion(self, messages, model="gpt-4-turbo", temperature=0.7):
         # Generate text completion using OpenAI's GPT model
         data = {
             'model': model,
-            'prompt': prompt,
-            'max_tokens': max_tokens
+            'messages': messages,
+            'temperature': temperature
         }
-        return self.make_request('completions', data)
+        return self.make_request('chat/completions', data)

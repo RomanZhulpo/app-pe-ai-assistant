@@ -23,8 +23,11 @@ class DBConnection:
         self.connection.row_factory = sqlite3.Row  # Добавление этой строки
         self.cursor = self.connection.cursor()
 
-    def execute(self, query):
-        return self.cursor.execute(query)
+    def execute(self, query, params=None):
+        if params:
+            return self.cursor.execute(query, params)
+        else:
+            return self.cursor.execute(query)
 
     def commit(self):
         self.connection.commit()

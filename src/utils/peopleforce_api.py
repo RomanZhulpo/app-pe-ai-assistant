@@ -112,6 +112,18 @@ class PeopleForceAPI:
         response.raise_for_status()  # Raise an error for bad status codes
         return response.json()
 
+    def check_api_status(self):
+        # Проверка доступности PeopleForce API
+        try:
+            response = self.list_all_locations()  # Используем существующий метод для проверки доступности
+            if response.get('error'):
+                logger.error(f"PeopleForce API check failed: {response['error']}")
+                return False
+            return True
+        except Exception as e:
+            logger.error(f"PeopleForce API check exception: {e}")
+            return False
+
 if __name__ == "__main__":
     # Initialize the API
     api = PeopleForceAPI()

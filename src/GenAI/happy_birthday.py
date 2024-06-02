@@ -4,9 +4,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
-from openai_api import OpenAI_API
 from pathlib import Path
-from prompt_templates import HB_prompt_template
+
 
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
@@ -14,6 +13,8 @@ sys.path.append(str(project_root))
 from src.data.db_functions import DBConnection
 from src.utils.google_space_webhook import GoogleChatWebhook  
 from src.config.logging_config import setup_logging
+from src.genai.openai_api import OpenAI_API
+from src.genai.prompt_templates import HB_prompt_template
 import argparse  # Импорт для обработки аргументов командной строки
 
 setup_logging()
@@ -30,7 +31,7 @@ class HappyBirthday:
             date = datetime.now().strftime('%m-%d')  # Изменено на '%m-%d'
         else:
             try:
-                # Убедимся, что дата в ��равильном формате и переформатируем её
+                # Убедимся, что дата в равильном формате и переформатируем её
                 date = datetime.strptime(date, '%Y-%m-%d').strftime('%m-%d')
             except ValueError:
                 logging.error("Incorrect date format, should be YYYY-MM-DD")
@@ -42,8 +43,8 @@ class HappyBirthday:
             WHERE strftime('%m-%d', date_of_birth) = ? AND active = 1 AND division = "Paysera Engineering"
         '''
         result = self.db.execute(query, (date,))
-        birthdays = result.fetchall()
-        return birthdays
+        # Убран вызов fetchall, так как result уже является списком
+        return result
     
     def calculate_anniversaries(hired_on, current_date=None):
         if current_date is None:
@@ -96,7 +97,7 @@ class HappyBirthday:
         if not today_birthdays:
             message = "There are *NO* birthdays at Paysera Engineering today."
             self.webhook.send_message(message)
-            logging.info(message)  # Логирование отсутствия дней рождения
+            logging.info(message)  # Ло��ирование отсутствия дней рождения
         else:
             for employee in today_birthdays:
                 logging.info(f"Today is the birthday of {employee['full_name']} in {employee['department']}.")  # Информация о дне рождения сотрудника

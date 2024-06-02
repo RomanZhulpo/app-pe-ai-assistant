@@ -19,21 +19,33 @@ db_path = project_root / os.getenv("DB_PATH")
 
 class DBConnection:
     def __init__(self):
-        self.connection = sqlite3.connect(db_path)
-        self.connection.row_factory = sqlite3.Row  # Добавление этой строки
+        self.db_path = db_path  # Сохраняем путь к базе данных в экземпляре класса
+        self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
+        self.connection.row_factory = sqlite3.Row  # Установка row_factory для доступа к данным по именам столбцов
         self.cursor = self.connection.cursor()
 
     def execute(self, query, params=None):
-        if params:
-            return self.cursor.execute(query, params)
-        else:
-            return self.cursor.execute(query)
+        # Создание нового соединения для каждого запроса
+        with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
+            conn.row_factory = sqlite3.Row  # Установка row_factory для нового соединения
+            cursor = conn.cursor()
+            if params:
+                result = cursor.execute(query, params)
+            else:
+                result = cursor.execute(query)
+            conn.commit()
+        return result.fetchall()  # Возвращаем результаты запроса
 
-    def commit(self):
-        self.connection.commit()
-
-    def close(self):
-        self.connection.close()
+    def check_database(self):
+        # Проверка доступности базы данных с созданием нового соединения
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+            return True
+        except Exception as e:
+            logger.error(f"Database check failed: {e}")
+            return False
 
 # Create database
 def create_database():

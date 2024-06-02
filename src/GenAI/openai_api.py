@@ -1,5 +1,8 @@
 import os
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAI_API:
@@ -11,10 +14,13 @@ class OpenAI_API:
             'Content-Type': 'application/json'
         }
 
-    def make_request(self, endpoint, data):
-        # Make HTTP request to the OpenAI API
+    def make_request(self, endpoint, data, method='POST'):
         import requests
-        response = requests.post(f'https://api.openai.com/v1/{endpoint}', headers=self.headers, json=data)
+        url = f'https://api.openai.com/v1/{endpoint}'
+        if method == 'POST':
+            response = requests.post(url, headers=self.headers, json=data)
+        elif method == 'GET':
+            response = requests.get(url, headers=self.headers, params=data)
         return response.json()
 
     def chat_completion(self, messages, model="gpt-4-turbo", temperature=0.7):
@@ -25,3 +31,15 @@ class OpenAI_API:
             'temperature': temperature
         }
         return self.make_request('chat/completions', data)
+
+    def check_api_status(self):
+        # Проверка доступности OpenAI API
+        try:
+            response = self.make_request('models', {}, 'GET')  # Изменено на GET
+            if response.get('error'):
+                logger.error(f"OpenAI API check failed: {response['error']}")
+                return False
+            return True
+        except Exception as e:
+            logger.error(f"OpenAI API check exception: {e}")
+            return False

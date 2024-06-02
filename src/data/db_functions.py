@@ -8,9 +8,10 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
+# Import custom logging configuration
 from src.config.logging_config import setup_logging
 
-# Setup logging
+# Setup logging configuration
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -19,25 +20,25 @@ db_path = project_root / os.getenv("DB_PATH")
 
 class DBConnection:
     def __init__(self):
-        self.db_path = db_path  # Сохраняем путь к базе данных в экземпляре класса
+        self.db_path = db_path  # Store the database path in the class instance
         self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
-        self.connection.row_factory = sqlite3.Row  # Установка row_factory для доступа к данным по именам столбцов
+        self.connection.row_factory = sqlite3.Row  # Enable access to columns by name
         self.cursor = self.connection.cursor()
 
     def execute(self, query, params=None):
-        # Создание нового соединения для каждого запроса
+        # Create a new connection for each query
         with sqlite3.connect(self.db_path, check_same_thread=False) as conn:
-            conn.row_factory = sqlite3.Row  # Установка row_factory для нового соединения
+            conn.row_factory = sqlite3.Row  # Enable access to columns by name
             cursor = conn.cursor()
             if params:
                 result = cursor.execute(query, params)
             else:
                 result = cursor.execute(query)
             conn.commit()
-        return result.fetchall()  # Возвращаем результаты запроса
+        return result.fetchall()  # Return the query results
 
     def check_database(self):
-        # Проверка доступности базы данных с созданием нового соединения
+        # Check the availability of the database by creating a new connection
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -50,12 +51,13 @@ class DBConnection:
 # Create database
 def create_database():
     try:
-         # Ensure the 'db' directory exists
+        # Ensure the 'db' directory exists
         db_dir = db_path.parent
         db_dir.mkdir(parents=True, exist_ok=True)
         
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
+            # Create Employees table
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS Employees (
                 id INTEGER PRIMARY KEY,
@@ -93,7 +95,7 @@ def create_database():
                 created_at DATETIME,
                 updated_at DATETIME)
             ''')
-            # Create HolidayPolicies tableåß
+            # Create HolidayPolicies table
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS HolidayPolicies (
                 id INTEGER PRIMARY KEY,
@@ -116,7 +118,7 @@ def create_database():
                 holiday_policy_id INTEGER,
                 created_at DATETIME,
                 updated_at DATETIME)
-        ''')
+            ''')
 
             conn.commit()
         logging.info("Database created successfully.")

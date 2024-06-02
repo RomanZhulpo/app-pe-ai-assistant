@@ -3,32 +3,33 @@ import os
 import sys
 from dotenv import load_dotenv
 import logging
-
 from pathlib import Path
 
 # Set up project root path
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
+# Import custom modules
 from src.data.db_functions import DBConnection
 from src.utils.google_space_webhook import GoogleChatWebhook
 from src.config.logging_config import setup_logging
 from src.genai.prompt_templates import public_holiday_prompt_template
 from src.genai.openai_api import OpenAI_API
 
+# Load environment variables and setup logging
 load_dotenv()
 setup_logging()
 
 class PublicHoliday:
     def __init__(self, db_connection, webhook_url):
         self.db = db_connection
-        self.webhook = GoogleChatWebhook(webhook_url)
-        self.api = OpenAI_API()
+        self.webhook = GoogleChatWebhook(webhook_url)  # Initialize webhook
+        self.api = OpenAI_API()  # Initialize OpenAI API
         logging.info("PublicHoliday initialized with given database connection, webhook URL, and OpenAI API.")
 
     def find_holidays(self, date=None):
         if date is None:
-            date = datetime.datetime.now().strftime('%Y-%m-%d')
+            date = datetime.datetime.now().strftime('%Y-%m-%d')  # Default to today's date
         logging.info(f"Searching for public holidays on: {date}")
         query = """
         SELECT h.name AS holiday_name, p.name AS location_name, p.country_code AS location_code, h.occurs_on AS holiday_date
@@ -58,6 +59,7 @@ class PublicHoliday:
 
         messages = []
         for holiday in holidays:
+            # Format the prompt using the template and holiday data
             prompt = public_holiday_prompt_template.format(
                 holiday_date=holiday['holiday_date'],
                 holiday_name=holiday['holiday_name'],
@@ -66,7 +68,7 @@ class PublicHoliday:
             )
             prompt_data = [{"role": "user", "content": prompt}]
             response = self.api.chat_completion(prompt_data)
-            logging.debug(f"API response: {response}")  # Логирование полного ответа API
+            logging.debug(f"API response: {response}")  # Log the full API response
 
             if 'choices' in response and response['choices'] and 'message' in response['choices'][0] and 'content' in response['choices'][0]['message']:
                 message_content = response['choices'][0]['message']['content']
@@ -102,9 +104,9 @@ class PublicHoliday:
 
 if __name__ == "__main__":
     db = DBConnection()
-    webhook_url = os.getenv("WEBHOOK_URL") 
+    webhook_url = os.getenv("WEBHOOK_URL")  # Get the webhook URL from environment variables
     public_holiday = PublicHoliday(db, webhook_url)
-    specific_date = '2024-06-02'
+    specific_date = '2024-06-03'
     responses = public_holiday.generate_and_send_holiday_message(specific_date)
     for response in responses:
         if hasattr(response, 'json'):

@@ -1,4 +1,3 @@
-
 import sqlite3
 import logging
 from datetime import datetime
@@ -14,14 +13,16 @@ load_dotenv()
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
+# Import custom modules
 from src.config.logging_config import setup_logging
 from src.utils.peopleforce_api import PeopleForceAPI
 from src.data.db_functions import create_database
-# Setup logging
+
+# Setup logging configuration
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# Parse date
+# Parse date string to date object
 def parse_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else None
 
@@ -31,11 +32,11 @@ db_path = project_root / os.getenv("DB_PATH")
 
 # Get employees from Peopleforce API and import to database
 def import_employees():
-    create_database()
+    create_database()  # Ensure the database is created
     api = PeopleForceAPI()
     page = 1
     total_imported = 0
-        
+
     while True:
         params = {
             "status": "active",
@@ -53,7 +54,7 @@ def import_employees():
         total_imported += len(employees_data)
         page += 1  # Go to the next page
 
-    deactivate_missing_employees()
+    deactivate_missing_employees()  # Deactivate employees not in the imported list
     logging.info(f"Total employees imported: {total_imported}")
 
 # Insert employee data into the database
@@ -110,6 +111,7 @@ def deactivate_missing_employees():
         ''', tuple(imported_employee_ids))
         conn.commit()
 
+# Import holiday policies from Peopleforce API
 def import_holiday_policies_from_api():
     api = PeopleForceAPI()
     holiday_policies = api.list_all_holiday_policies()
@@ -129,6 +131,7 @@ def import_holiday_policies_from_api():
             ))
         conn.commit()
 
+# Import all holidays from Peopleforce API
 def import_all_holidays_from_api():
     api = PeopleForceAPI()
     page = 1
@@ -137,7 +140,7 @@ def import_all_holidays_from_api():
     while True:
         all_holidays = api.list_all_holidays(page=page)
         if not all_holidays['data']:
-            break  # Если нет данных, выходим из цикла
+            break  # If there is no more data, exit the loop
 
         with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
@@ -152,7 +155,7 @@ def import_all_holidays_from_api():
                     holiday['occurs_on'],
                     holiday['starts_on'],
                     holiday['ends_on'],
-                    not holiday['working'],  # Преобразование working в is_working, где True означает рабочий день
+                    not holiday['working'],  # Convert working to is_working, where True means a working day
                     holiday['compensated_on'],
                     holiday['observed_on'],
                     holiday['holiday_policy_id'],
@@ -161,8 +164,7 @@ def import_all_holidays_from_api():
                 ))
             conn.commit()
         total_imported += len(all_holidays['data'])
-        page += 1  # Переход на следующую страницу
-
+        page += 1  # Go to the next page
     print(f"Total holidays imported: {total_imported}")
 
 

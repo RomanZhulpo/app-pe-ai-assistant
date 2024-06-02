@@ -9,32 +9,37 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
+# Import custom logging configuration
 from src.config.logging_config import setup_logging
 
-# Setup logging
+# Setup logging configuration
 setup_logging()
 logger = logging.getLogger(__name__)
 
+# Load environment variables from a .env file
 load_dotenv()
 
 class PeopleForceAPI:
-    BASE_URL = os.getenv("PEOPLEFORCE_API_URL")
+    BASE_URL = os.getenv("PEOPLEFORCE_API_URL")  # Base URL for the PeopleForce API
     
     def __init__(self):
-        api_key = os.getenv("PEOPLEFORCE_API_KEY")
-       
-        # Отладочный вывод переменных окружения
+        api_key = os.getenv("PEOPLEFORCE_API_KEY")  # API key for authentication
+        
+        # Debugging environment variables
         logger.debug(f"PEOPLEFORCE_API_URL: {self.BASE_URL}")
-        logger.debug(f"PEOPLEFORCE_API_KEY: {api_key}")       
+        logger.debug(f"PEOPLEFORCE_API_KEY: {api_key}")
 
+        # Check if API key is set
         if not api_key:
             logger.error("API key not found. Please set the PEOPLEFORCE_API_KEY environment variable.")
             raise ValueError("API key not found. Please set the PEOPLEFORCE_API_KEY environment variable.")
         
+        # Check if API URL is set
         if not self.BASE_URL:
             logger.error("API URL not found. Please set the PEOPLEFORCE_API_URL environment variable.")
             raise ValueError("API URL not found. Please set the PEOPLEFORCE_API_URL environment variable.")
         
+        # Set headers for API requests
         self.headers = {
             "X-API-KEY": api_key,
             "accept": "application/json",
@@ -94,7 +99,7 @@ class PeopleForceAPI:
         response.raise_for_status()  # Raise an error for bad status codes
         return response.json()
 
-     # List all holiday policies
+    # List all holiday policies
     def list_all_holiday_policies(self):
         url = f"{self.BASE_URL}/holiday_policies"
         logger.info(f"Requesting all holiday policies from {url}")
@@ -113,9 +118,9 @@ class PeopleForceAPI:
         return response.json()
 
     def check_api_status(self):
-        # Проверка доступности PeopleForce API
+        # Check the availability of the PeopleForce API
         try:
-            response = self.list_all_locations()  # Используем существующий метод для проверки доступности
+            response = self.list_all_locations()  # Use an existing method to check availability
             if response.get('error'):
                 logger.error(f"PeopleForce API check failed: {response['error']}")
                 return False

@@ -5,41 +5,45 @@ import sys
 from pathlib import Path
 import logging
 
+# Add the project root to the system path for module resolution
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
-from src.config.logging_config import setup_logging  # Убедитесь, что путь импорта корректен
+# Import custom logging configuration
+from src.config.logging_config import setup_logging  # Ensure the import path is correct
 
-# Настройка логирования
+# Setup logging configuration
 setup_logging()
-logger = logging.getLogger(__name__)  # Создание логгера для модуля
+logger = logging.getLogger(__name__)  # Create a logger for this module
 
 class GoogleChatWebhook:
     def __init__(self, webhook_url):
         self.url = webhook_url
 
     def send_message(self, message):
-        # Убедитесь, что message является строкой
+        # Ensure the message is a string
         if not isinstance(message, str):
-            logger.error("Отправляемое сообщение должно быть строкой")
+            logger.error("The message to be sent must be a string")
             return None
 
         app_message = {"text": message}
         try:
+            # Send the message to the webhook URL
             response = requests.post(self.url, json=app_message)
-            logger.debug(f"Отправляемое сообщение: {json.dumps(app_message)}")
-            logger.debug(f"Ответ сервера: {response.status_code}, {response.text}")
+            logger.debug(f"Message being sent: {json.dumps(app_message)}")
+            logger.debug(f"Server response: {response.status_code}, {response.text}")
             
             if response.status_code != 200:
-                logger.error(f"Ошибка отправки сообщения: {response.text}")
+                logger.error(f"Error sending message: {response.text}")
             return response
         except requests.exceptions.RequestException as e:
-            logger.error(f"Ошибка при отправке сообщения: {e}")
+            logger.error(f"Error while sending message: {e}")
             return None
 
 if __name__ == "__main__":
+    # Get the webhook URL from environment variables
     webhook_url = os.getenv("WEBHOOK_URL")
     webhook = GoogleChatWebhook(webhook_url)
-    response = webhook.send_message("Привет от Python скрипта!")
+    response = webhook.send_message("Hello from Python script!")
     if response:
-        logger.info(f"Статус ответа: {response.status_code}")
+        logger.info(f"Response status: {response.status_code}")

@@ -31,18 +31,21 @@ def readiness_check():
     """Endpoint to check if all dependencies are ready"""
     # Check database availability
     db = DBConnection()
+    logger.info("Checking database availability")
     if not db.check_database():
         logger.error("Database is not ready")
         return 'DB down', 500
 
     # Check OpenAI API availability
     openai_api = OpenAI_API()
+    logger.info("Checking OpenAI API availability")
     if not openai_api.check_api_status():
         logger.error("OpenAI API is not ready")
         return 'OpenAI API down', 500
 
     # Check PeopleForce API availability
     peopleforce_api = PeopleForceAPI()
+    logger.info("Checking PeopleForce API availability")
     if not peopleforce_api.check_api_status():
         logger.error("PeopleForce API is not ready")
         return 'PeopleForce API down', 500

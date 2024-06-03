@@ -27,10 +27,12 @@ app = Flask(__name__)
 
 # Initialize and start the APScheduler
 scheduler = APScheduler()
-scheduler.init_app(app)
-scheduler.start()
 
-logger.debug("Scheduler initialized and started")
+def initialize_scheduler():
+    if not scheduler.running:
+        scheduler.init_app(app)
+        scheduler.start()
+        logger.debug("Scheduler initialized and started")
 
 # Initialize database connection
 db_connection = DBConnection()
@@ -52,31 +54,42 @@ def schedule_public_holidays():
     logger.info("Scheduling public holiday messages")
     public_holiday.generate_and_send_holiday_message()
 
-# Schedule the birthday wishes job
-scheduler.add_job(
-    func=schedule_birthday_wishes, 
-    trigger='cron', 
-    hour=21, 
-    minute=49, 
-    timezone='UTC',
-    id='birthday_wish_job'
-)
-logger.info("Birthday wishes job scheduled")
+# Function to get scheduling times from environment variables
+def get_schedule_time(env_var, default):
+    value = int(os.getenv(env_var, default))
+    logger.info(f"{env_var} is set to {value}")
+    return value
 
-# Schedule the public holiday messages job
-scheduler.add_job(
-    func=schedule_public_holidays, 
-    trigger='cron', 
-    hour=21, 
-    minute=49, 
-    timezone='UTC',
-    id='public_holiday_message_job'  
-)
-logger.info("Public holiday messages job scheduled")
+def schedule_jobs():
+    # Schedule the birthday wishes job
+    if not scheduler.get_job('birthday_wish_job'):
+        scheduler.add_job(
+            func=schedule_birthday_wishes, 
+            trigger='cron', 
+            hour=get_schedule_time("BIRTHDAY_HOUR", 21), 
+            minute=get_schedule_time("BIRTHDAY_MINUTE", 49), 
+            timezone='UTC',
+            id='birthday_wish_job'
+        )
+        logger.info("Birthday wishes job scheduled")
+
+    # Schedule the public holiday messages job
+    if not scheduler.get_job('public_holiday_message_job'):
+        scheduler.add_job(
+            func=schedule_public_holidays, 
+            trigger='cron', 
+            hour=get_schedule_time("HOLIDAY_HOUR", 21), 
+            minute=get_schedule_time("HOLIDAY_MINUTE", 49), 
+            timezone='UTC',
+            id='public_holiday_message_job'  
+        )
+        logger.info("Public holiday messages job scheduled")
 
 # Register healthcheck blueprint
 app.register_blueprint(healthcheck)
 
 if __name__ == "__main__":
+    initialize_scheduler()
+    schedule_jobs()
     logger.info("Running the Flask application")
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)

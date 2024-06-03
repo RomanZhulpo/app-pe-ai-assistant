@@ -13,14 +13,19 @@ class OpenAI_API:
             'Authorization': f'Bearer {self.api_key}',  # Set authorization header
             'Content-Type': 'application/json'  # Set content type to JSON
         }
+        logger.info("OpenAI_API initialized successfully.")
 
     def make_request(self, endpoint, data, method='POST'):
         import requests
         url = f'https://api.openai.com/v1/{endpoint}'  # Construct the full URL
+        logger.info(f"Making {method} request to {url}")
+        logger.debug(f"Making {method} request to {url} with data: {data}")
         if method == 'POST':
             response = requests.post(url, headers=self.headers, json=data)  # Make a POST request
         elif method == 'GET':
             response = requests.get(url, headers=self.headers, params=data)  # Make a GET request
+        logger.info(f"Received response: {response.status_code}")
+        logger.debug(f"Received response: {response.status_code} - {response.text}")
         return response.json()  # Return the response as JSON
 
     def chat_completion(self, messages, model="gpt-4-turbo", temperature=0.7):
@@ -39,6 +44,7 @@ class OpenAI_API:
             if response.get('error'):
                 logger.error(f"OpenAI API check failed: {response['error']}")  # Log an error if the API check fails
                 return False
+            logger.info("OpenAI API is available.")
             return True
         except Exception as e:
             logger.error(f"OpenAI API check exception: {e}")  # Log an exception if one occurs

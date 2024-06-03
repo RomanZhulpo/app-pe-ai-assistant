@@ -38,9 +38,9 @@ TO PROVIDE RELEVANT INFORMATION. FORMAT THE RESPONSE TO BE READY TO SEND VIA GOO
 
 **Example Message:**
 
-*Holiday Announcement:* *[national_holiday_name]*
+*Public Holiday Announcement:* *[national_holiday_name]*({holiday_name})
 
-We are excited to celebrate *[national_holiday_name]* on *{holiday_date}* in *{location_name}* ({location_code}).
+Today *{holiday_date}* is a public holiday in the *{location_name}* ({location_code})*[national_holiday_name]*.
 
 _Historical Background:_
 *[national_holiday_name]* celebrates [brief historical significance].
@@ -51,7 +51,7 @@ _Best Ways to Celebrate:_
 3. *Cultural Experiences:* Explore exhibits or performances.
 4. *Reflect and Appreciate:* Reflect on its historical importance.
 
-*Enjoy the celebration!* 
+*Enjoy you day!* 
 _Paysera Engineering AI Assistant_
 """
 

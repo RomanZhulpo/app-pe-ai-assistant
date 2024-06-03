@@ -24,6 +24,7 @@ class DBConnection:
         self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row  # Enable access to columns by name
         self.cursor = self.connection.cursor()
+        logger.info(f"DBConnection initialized with database path: {self.db_path}")
 
     def execute(self, query, params=None):
         # Create a new connection for each query
@@ -43,6 +44,7 @@ class DBConnection:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute("SELECT 1")
+            logger.info("Database is available.")
             return True
         except Exception as e:
             logger.error(f"Database check failed: {e}")
@@ -121,7 +123,7 @@ def create_database():
             ''')
 
             conn.commit()
-        logging.info("Database created successfully.")
+        logger.info("Database created successfully.")
     except Exception as e:
-        logging.error(f"Error creating database: {e}")
+        logger.error(f"Error creating database: {e}")
         raise e

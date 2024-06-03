@@ -7,6 +7,8 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY . .
+
 # Define build-time arguments and set default values
 ARG BIRTHDAY_HOUR=7
 ARG BIRTHDAY_MINUTE=0
@@ -25,8 +27,6 @@ ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 ENV PEOPLE_API_KEY=${PEOPLE_API_KEY}
 ENV PEOPLEFORCE_API_URL=${PEOPLEFORCE_API_URL}
 ENV DB_PATH=${DB_PATH}
-
-COPY . .
 
 EXPOSE 8080
 

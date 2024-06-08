@@ -77,6 +77,8 @@ class PublicHoliday:
             return None  # Return None to indicate an error
 
     def generate_holiday_message(self, date=None):
+        if date is None:
+            date = datetime.datetime.now().strftime('%Y-%m-%d')  # Default to today's date
         holidays = self.find_holidays(date)
         if holidays is None:
             message = "Error occurred while finding holidays."

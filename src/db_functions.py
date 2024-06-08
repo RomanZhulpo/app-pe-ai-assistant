@@ -1,26 +1,16 @@
 import sqlite3
 import logging
-import sys
 import os
 from pathlib import Path
 
-# Add the project root directory to the sys.path
-project_root = Path(__file__).resolve().parents[1]
-sys.path.append(str(project_root))
-
-# Import custom logging configuration
-from logging_config import setup_logging
-
 # Setup logging configuration
+from logging_config import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 
-# Global variable for database path
-db_path = project_root / os.getenv("DB_PATH")
-
 class DBConnection:
-    def __init__(self):
-        self.db_path = db_path  # Store the database path in the class instance
+    def __init__(self, db_path=None):
+        self.db_path = Path(db_path or os.getenv("DB_PATH", "/app/db/app.db")).resolve()
         logger.info(f"Database path: {self.db_path}")  # Log the database path
 
         # Ensure the directory exists
@@ -79,8 +69,8 @@ class DBConnection:
             logger.error(f"Error checking if table {table_name} exists: {e}")
             return False
 
-# Create database
-def create_database():
+def create_database(db_path=None):
+    db_path = Path(db_path or os.getenv("DB_PATH", "/app/db/app.db")).resolve()
     try:
         # Ensure the 'db' directory exists
         db_dir = db_path.parent

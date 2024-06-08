@@ -15,7 +15,6 @@ ARG BIRTHDAY_MINUTE=0
 ARG HOLIDAY_HOUR=7
 ARG HOLIDAY_MINUTE=01
 ARG LOG_LEVEL=INFO
-ARG DB_PATH=/app/db/app.db  # Ensure this points to a file, not a directory
 
 # Set environment variables based on build-time arguments
 ENV BIRTHDAY_HOUR=${BIRTHDAY_HOUR}

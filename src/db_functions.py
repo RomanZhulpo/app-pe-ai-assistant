@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class DBConnection:
     def __init__(self, db_path=None):
-        self.db_path = Path(db_path or os.getenv("DB_PATH", "/app/db/app.db")).resolve()
+        self.db_path = Path(db_path or os.getenv("DB_PATH", "/app/db/pe_ass.db")).resolve()
         logger.info(f"Database path: {self.db_path}")  # Log the database path
 
         # Ensure the directory exists

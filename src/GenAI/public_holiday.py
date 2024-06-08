@@ -106,10 +106,7 @@ if __name__ == "__main__":
     db = DBConnection()
     webhook_url = os.getenv("WEBHOOK_URL")  # Get the webhook URL from environment variables
     public_holiday = PublicHoliday(db, webhook_url)
-    specific_date = '2024-06-03'
+    specific_date = '2024-06-06'
     responses = public_holiday.generate_and_send_holiday_message(specific_date)
     for response in responses:
-        if hasattr(response, 'json'):
-            logging.debug(f"Server response: {response.json()}")
-        else:
-            logging.error("Response object does not have a .json() method")
+        logging.debug(f"Server response status: {response.status_code if hasattr(response, 'status_code') else 'No status code available'}")

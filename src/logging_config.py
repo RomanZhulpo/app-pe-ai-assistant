@@ -16,9 +16,10 @@ def setup_logging():
     if not logging_initialized:
         # Get log level from environment variable, default to 'DEBUG'
         log_level = os.getenv('LOG_LEVEL', 'DEBUG').upper()
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'logs')
+        # Create log directory in the project root or /app/logs/
+        log_dir = os.path.join(project_root, 'app', 'logs')
         os.makedirs(log_dir, exist_ok=True)  # Ensure the log directory exists
-        log_file = os.path.join(log_dir, 'app-pe-ai-assistant.log')
+        log_file = os.path.join(log_dir, 'app-pe-ass.log')
 
         # Configure logging settings
         logging.basicConfig(

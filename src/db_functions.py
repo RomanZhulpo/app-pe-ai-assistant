@@ -5,11 +5,11 @@ import os
 from pathlib import Path
 
 # Add the project root directory to the sys.path
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
 # Import custom logging configuration
-from src.config.logging_config import setup_logging
+from logging_config import setup_logging
 
 # Setup logging configuration
 setup_logging()
@@ -48,6 +48,23 @@ class DBConnection:
             return True
         except Exception as e:
             logger.error(f"Database check failed: {e}")
+            return False
+
+    def check_table_exists(self, table_name):
+        # Check if a specific table exists in the database
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}';")
+                result = cursor.fetchone()
+            if result:
+                logger.info(f"Table {table_name} exists.")
+                return True
+            else:
+                logger.info(f"Table {table_name} does not exist.")
+                return False
+        except Exception as e:
+            logger.error(f"Error checking if table {table_name} exists: {e}")
             return False
 
 # Create database

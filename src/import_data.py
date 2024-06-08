@@ -10,13 +10,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Add the project root directory to the sys.path
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
 # Import custom modules
-from src.config.logging_config import setup_logging
-from src.utils.peopleforce_api import PeopleForceAPI
-from src.data.db_functions import create_database
+from logging_config import setup_logging
+from peopleforce_api import PeopleForceAPI
+from db_functions import create_database
 
 # Setup logging configuration
 setup_logging()

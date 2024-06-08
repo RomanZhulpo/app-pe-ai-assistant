@@ -10,11 +10,11 @@ project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
 # Import custom modules
-from src.genai.happy_birthday import HappyBirthday
-from src.data.db_functions import DBConnection
-from src.config.logging_config import setup_logging
-from src.utils.healthcheck import healthcheck  
-from src.genai.public_holiday import PublicHoliday 
+from happy_birthday import HappyBirthday
+from db_functions import DBConnection
+from logging_config import setup_logging
+from healthcheck import healthcheck  
+from public_holiday import PublicHoliday 
 
 # Setup logging configuration
 setup_logging()
@@ -47,12 +47,18 @@ public_holiday = PublicHoliday(db_connection, webhook_url)
 # Function to schedule birthday wishes
 def schedule_birthday_wishes():
     logger.info("Scheduling birthday wishes")
-    birthday_celebrator.send_birthday_wishes()
+    try:
+        birthday_celebrator.send_birthday_wishes()
+    except Exception as e:
+        logger.error(f"Error scheduling birthday wishes: {e}", exc_info=True)
 
 # Function to schedule public holiday messages
 def schedule_public_holidays():
     logger.info("Scheduling public holiday messages")
-    public_holiday.generate_and_send_holiday_message()
+    try:
+        public_holiday.generate_and_send_holiday_message()
+    except Exception as e:
+        logger.error(f"Error scheduling public holiday messages: {e}", exc_info=True)
 
 # Function to get scheduling times from environment variables
 def get_schedule_time(env_var, default):
@@ -89,7 +95,10 @@ def schedule_jobs():
 app.register_blueprint(healthcheck)
 
 if __name__ == "__main__":
-    initialize_scheduler()
-    schedule_jobs()
-    logger.info("Running the Flask application")
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    try:
+        initialize_scheduler()
+        schedule_jobs()
+        logger.info("Running the Flask application")
+        app.run(host='0.0.0.0', port=8080, debug=False)
+    except Exception as e:
+        logger.error(f"Failed to start the Flask application: {e}", exc_info=True)

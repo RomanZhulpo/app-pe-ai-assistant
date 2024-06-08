@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
-from src.data.db_functions import DBConnection
-from src.utils.google_space_webhook import GoogleChatWebhook  
-from src.config.logging_config import setup_logging
-from src.genai.openai_api import OpenAI_API
-from src.genai.prompt_templates import HB_prompt_template
+from db_functions import DBConnection
+from google_space_webhook import GoogleChatWebhook  
+from logging_config import setup_logging
+from openai_api import OpenAI_API
+from prompt_templates import HB_prompt_template
 import argparse  # Import for command-line argument parsing
 
 setup_logging()
@@ -25,6 +25,33 @@ class HappyBirthday:
     def __init__(self, db_connection, webhook_url):
         self.db = db_connection
         self.webhook = GoogleChatWebhook(webhook_url)  # Initialize webhook
+        logging.info("HappyBirthday initialized with given database connection and webhook URL.")
+        
+        # Ensure the database and tables are created
+        self.ensure_database_setup()
+
+    def ensure_database_setup(self):
+        from db_functions import create_database
+        from import_data import import_employees, import_holiday_policies_from_api, import_all_holidays_from_api
+        
+        if not self.db.check_database():
+            logging.info("Database not found or not accessible. Creating database and importing data.")
+            create_database()
+            import_employees()
+            import_holiday_policies_from_api()
+            import_all_holidays_from_api()
+        else:
+            logging.info("Database is available and accessible.")
+            # Check if the required tables exist
+            required_tables = ["Employees", "Locations", "HolidayPolicies", "All_Holidays"]
+            for table in required_tables:
+                if not self.db.check_table_exists(table):
+                    logging.info(f"Table {table} not found. Creating database and importing data.")
+                    create_database()
+                    import_employees()
+                    import_holiday_policies_from_api()
+                    import_all_holidays_from_api()
+                    break
 
     def find_birthdays(self, date=None):
         if date is None:
@@ -42,9 +69,13 @@ class HappyBirthday:
             SELECT id, full_name, date_of_birth, gender, position_name, department, hired_on FROM Employees
             WHERE strftime('%m-%d', date_of_birth) = ? AND active = 1 AND division = "Paysera Engineering"
         '''
-        result = self.db.execute(query, (date,))
-        return result
-    
+        try:
+            result = self.db.execute(query, (date,))
+            return result
+        except Exception as e:
+            logging.error("Error finding birthdays", exc_info=True)
+            return []
+
     @staticmethod
     def calculate_anniversaries(hired_on, current_date=None):
         if current_date is None:
@@ -94,6 +125,11 @@ class HappyBirthday:
 
     def send_birthday_wishes(self, date=None):
         today_birthdays = self.find_birthdays(date)
+        if today_birthdays is None:
+            message = "Error occurred while finding birthdays."
+            logging.error(message)
+            return
+
         if not today_birthdays:
             message = "There are *NO* birthdays at Paysera Engineering today."
             self.webhook.send_message(message)

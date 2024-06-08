@@ -1,8 +1,18 @@
 import os
 from dotenv import load_dotenv
 import logging
+import sys
+from pathlib import Path
 
-# Initialize logger for this module
+# Add the project root to the system path for module resolution
+project_root = Path(__file__).resolve().parents[1]
+sys.path.append(str(project_root))
+
+# Import custom modules
+from logging_config import setup_logging
+
+# Setup logging configuration
+setup_logging()
 logger = logging.getLogger(__name__)
 
 class OpenAI_API:

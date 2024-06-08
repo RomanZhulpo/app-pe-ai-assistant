@@ -6,11 +6,11 @@ from pathlib import Path
 import logging
 
 # Add the project root to the system path for module resolution
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
 # Import custom logging configuration
-from src.config.logging_config import setup_logging  # Ensure the import path is correct
+from logging_config import setup_logging  # Ensure the import path is correct
 
 # Setup logging configuration
 setup_logging()

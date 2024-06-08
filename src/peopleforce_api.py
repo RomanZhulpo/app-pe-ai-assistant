@@ -10,7 +10,7 @@ project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
 # Import custom logging configuration
-from src.config.logging_config import setup_logging
+from logging_config import setup_logging
 
 # Setup logging configuration
 setup_logging()

@@ -4,14 +4,14 @@ import sys
 import logging
 
 # Add the project root to the system path for module resolution
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
 
 # Import custom modules
-from src.config.logging_config import setup_logging
-from src.data.db_functions import DBConnection
-from src.genai.openai_api import OpenAI_API
-from src.utils.peopleforce_api import PeopleForceAPI
+from logging_config import setup_logging
+from db_functions import DBConnection
+from openai_api import OpenAI_API
+from peopleforce_api import PeopleForceAPI
 
 # Initialize logging configuration
 setup_logging()

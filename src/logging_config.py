@@ -2,9 +2,11 @@ import logging
 from dotenv import load_dotenv, dotenv_values
 import os
 from pathlib import Path
+import sys
 
 # Set the project root directory
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[1]
+sys.path.append(str(project_root))
 load_dotenv()  # Load environment variables from .env file
 
 logging_initialized = False

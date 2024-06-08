@@ -4,10 +4,14 @@ from flask_apscheduler import APScheduler
 import os
 from pathlib import Path
 import sys
+from dotenv import load_dotenv
 
 # Add the project root to the system path for module resolution
 project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
+
+# Load environment variables from .env file
+load_dotenv(dotenv_path=project_root / '.env')
 
 # Import custom modules
 from happy_birthday import HappyBirthday

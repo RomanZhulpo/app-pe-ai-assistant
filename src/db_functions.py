@@ -21,10 +21,22 @@ db_path = project_root / os.getenv("DB_PATH")
 class DBConnection:
     def __init__(self):
         self.db_path = db_path  # Store the database path in the class instance
-        self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
-        self.connection.row_factory = sqlite3.Row  # Enable access to columns by name
-        self.cursor = self.connection.cursor()
-        logger.info(f"DBConnection initialized with database path: {self.db_path}")
+        logger.info(f"Database path: {self.db_path}")  # Log the database path
+
+        # Ensure the directory exists
+        db_dir = self.db_path.parent
+        if not db_dir.exists():
+            logger.info(f"Creating directory for database: {db_dir}")
+            db_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
+            self.connection.row_factory = sqlite3.Row  # Enable access to columns by name
+            self.cursor = self.connection.cursor()
+            logger.info(f"DBConnection initialized with database path: {self.db_path}")
+        except sqlite3.OperationalError as e:
+            logger.error(f"Error connecting to database: {e}")
+            raise e
 
     def execute(self, query, params=None):
         # Create a new connection for each query

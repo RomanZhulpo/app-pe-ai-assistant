@@ -4,8 +4,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
-from pathlib import Path
-
 
 project_root = Path(__file__).resolve().parents[1]
 sys.path.append(str(project_root))
@@ -21,37 +19,12 @@ setup_logging()
 load_dotenv()  # Load environment variables from .env file
 
 logging.info("Logging is set up.")
+
 class HappyBirthday:
     def __init__(self, db_connection, webhook_url):
         self.db = db_connection
         self.webhook = GoogleChatWebhook(webhook_url)  # Initialize webhook
         logging.info("HappyBirthday initialized with given database connection and webhook URL.")
-        
-        # Ensure the database and tables are created
-        self.ensure_database_setup()
-
-    def ensure_database_setup(self):
-        from db_functions import create_database
-        from import_data import import_employees, import_holiday_policies_from_api, import_all_holidays_from_api
-        
-        if not self.db.check_database():
-            logging.info("Database not found or not accessible. Creating database and importing data.")
-            create_database()
-            import_employees()
-            import_holiday_policies_from_api()
-            import_all_holidays_from_api()
-        else:
-            logging.info("Database is available and accessible.")
-            # Check if the required tables exist
-            required_tables = ["Employees", "Locations", "HolidayPolicies", "All_Holidays"]
-            for table in required_tables:
-                if not self.db.check_table_exists(table):
-                    logging.info(f"Table {table} not found. Creating database and importing data.")
-                    create_database()
-                    import_employees()
-                    import_holiday_policies_from_api()
-                    import_all_holidays_from_api()
-                    break
 
     def find_birthdays(self, date=None):
         if date is None:

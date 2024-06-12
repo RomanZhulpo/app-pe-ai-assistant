@@ -26,32 +26,6 @@ class PublicHoliday:
         self.webhook = GoogleChatWebhook(webhook_url)  # Initialize webhook
         self.api = OpenAI_API()  # Initialize OpenAI API
         logging.info("PublicHoliday initialized with given database connection, webhook URL, and OpenAI API.")
-        
-        # Ensure the database and tables are created
-        self.ensure_database_setup()
-
-    def ensure_database_setup(self):
-        from db_functions import create_database
-        from import_data import import_employees, import_holiday_policies_from_api, import_all_holidays_from_api
-        
-        if not self.db.check_database():
-            logging.info("Database not found or not accessible. Creating database and importing data.")
-            create_database()
-            import_employees()
-            import_holiday_policies_from_api()
-            import_all_holidays_from_api()
-        else:
-            logging.info("Database is available and accessible.")
-            # Check if the required tables exist
-            required_tables = ["All_Holidays", "Employees", "HolidayPolicies", "Locations"]
-            for table in required_tables:
-                if not self.db.check_table_exists(table):
-                    logging.info(f"Table {table} not found. Creating database and importing data.")
-                    create_database()
-                    import_employees()
-                    import_holiday_policies_from_api()
-                    import_all_holidays_from_api()
-                    break
 
     def find_holidays(self, date=None):
         if date is None:

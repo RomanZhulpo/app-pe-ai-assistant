@@ -15,10 +15,11 @@ load_dotenv(dotenv_path=project_root / '.env')
 
 # Import custom modules
 from happy_birthday import HappyBirthday
-from db_functions import DBConnection
+from db_functions import DBConnection, create_database
 from logging_config import setup_logging
 from healthcheck import healthcheck  
 from public_holiday import PublicHoliday 
+from import_data import PeopleForceDataImporter
 
 # Setup logging configuration
 setup_logging()
@@ -40,6 +41,36 @@ def initialize_scheduler():
 
 # Initialize database connection
 db_connection = DBConnection()
+
+# Function to ensure database and tables are created
+def ensure_database_setup():
+    if not db_connection.check_database():
+        logger.info("Database not found or not accessible. Creating database and importing data.")
+        create_database()
+        PeopleForceDataImporter().update_data_from_api()
+    else:
+        logger.info("Database is available and accessible.")
+        # Check if the required tables exist
+        required_tables = ["All_Holidays", "Employees", "HolidayPolicies", "Locations"]
+        for table in required_tables:
+            if not db_connection.check_table_exists(table):
+                logger.info(f"Table {table} not found. Creating database and importing data.")
+                create_database()
+                PeopleForceDataImporter().update_data_from_api()
+                break
+
+# Function to schedule daily data update
+def schedule_daily_data_update():
+    if not scheduler.get_job('daily_data_update'):
+        scheduler.add_job(
+            func=PeopleForceDataImporter().update_data_from_api,
+            trigger='cron',
+            hour=get_schedule_time("DAILY_UPDATE_HOUR", 6),  # Get the hour from environment variables
+            minute=get_schedule_time("DAILY_UPDATE_MINUTE", 0),  # Get the minute from environment variables
+            timezone='UTC',
+            id='daily_data_update'
+        )
+        logger.info("Daily data update job scheduled")
 
 # Get webhook URL from environment variables
 webhook_url = os.getenv("WEBHOOK_URL")
@@ -76,8 +107,8 @@ def schedule_jobs():
         scheduler.add_job(
             func=schedule_birthday_wishes, 
             trigger='cron', 
-            hour=get_schedule_time("BIRTHDAY_HOUR", 21), 
-            minute=get_schedule_time("BIRTHDAY_MINUTE", 49), 
+            hour=get_schedule_time("BIRTHDAY_HOUR", 7), 
+            minute=get_schedule_time("BIRTHDAY_MINUTE", 0), 
             timezone='UTC',
             id='birthday_wish_job'
         )
@@ -88,8 +119,8 @@ def schedule_jobs():
         scheduler.add_job(
             func=schedule_public_holidays, 
             trigger='cron', 
-            hour=get_schedule_time("HOLIDAY_HOUR", 21), 
-            minute=get_schedule_time("HOLIDAY_MINUTE", 49), 
+            hour=get_schedule_time("HOLIDAY_HOUR", 7), 
+            minute=get_schedule_time("HOLIDAY_MINUTE", 1), 
             timezone='UTC',
             id='public_holiday_message_job'  
         )
@@ -100,7 +131,9 @@ app.register_blueprint(healthcheck)
 
 if __name__ == "__main__":
     try:
+        ensure_database_setup()
         initialize_scheduler()
+        schedule_daily_data_update()
         schedule_jobs()
         logger.info("Running the Flask application")
         app.run(host='0.0.0.0', port=8080, debug=False)

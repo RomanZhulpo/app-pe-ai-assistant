@@ -75,6 +75,9 @@ def schedule_daily_data_update():
 # Get webhook URL from environment variables
 webhook_url = os.getenv("WEBHOOK_URL")
 
+# Get notify_if_none parameter from environment variables
+notify_if_none = os.getenv("NOTIFY_IF_NONE", "false").lower() == "true"  # Convert to boolean
+
 # Initialize birthday and public holiday handlers
 birthday_celebrator = HappyBirthday(db_connection, webhook_url)
 public_holiday = PublicHoliday(db_connection, webhook_url)
@@ -83,7 +86,7 @@ public_holiday = PublicHoliday(db_connection, webhook_url)
 def schedule_birthday_wishes():
     logger.info("Scheduling birthday wishes")
     try:
-        birthday_celebrator.send_birthday_wishes()
+        birthday_celebrator.send_birthday_wishes(notify_if_none=notify_if_none)  # Pass the notify_if_none parameter
     except Exception as e:
         logger.error(f"Error scheduling birthday wishes: {e}", exc_info=True)
 

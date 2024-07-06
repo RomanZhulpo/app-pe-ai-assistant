@@ -40,6 +40,7 @@ This application is designed to send birthday wishes and public holiday notifica
     PEOPLEFORCE_API_URL=<your-peopleforce-api-url>
     DB_PATH=<path-to-your-database>
     LOG_LEVEL=INFO
+    NOTIFY_IF_NONE=false 
     ```
 
 3. **Build and run the Docker container**:

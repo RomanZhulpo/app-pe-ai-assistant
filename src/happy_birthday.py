@@ -96,7 +96,7 @@ class HappyBirthday:
         personalized_wishes = f"*{employee['full_name']}*, {generated_response}"
         return personalized_wishes
 
-    def send_birthday_wishes(self, date=None):
+    def send_birthday_wishes(self, date=None, notify_if_none=False):
         today_birthdays = self.find_birthdays(date)
         if today_birthdays is None:
             message = "Error occurred while finding birthdays."
@@ -104,9 +104,10 @@ class HappyBirthday:
             return
 
         if not today_birthdays:
-            message = "There are *NO* birthdays at Paysera Engineering today."
-            self.webhook.send_message(message)
-            logging.info(message)  # Log the absence of birthdays
+            if notify_if_none:
+                message = "There are *NO* birthdays at Paysera Engineering today."
+                self.webhook.send_message(message)
+                logging.info(message)  # Log the absence of birthdays
         else:
             for employee in today_birthdays:
                 logging.info(f"Today is the birthday of {employee['full_name']} in {employee['department']}.")  # Log employee's birthday
@@ -118,11 +119,12 @@ class HappyBirthday:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Send birthday wishes to employees.')
     parser.add_argument('--date', type=str, help='Date to check birthdays for, format YYYY-MM-DD', default=None)
+    parser.add_argument('--notify-if-none', action='store_true', help='Send notification if no birthdays are found')
     args = parser.parse_args()
 
-    logging.info(f"Script started with date: {args.date}")  # Log the provided date
+    logging.info(f"Script started with date: {args.date} and notify-if-none: {args.notify_if_none}")  # Log the provided date and notify-if-none flag
 
     db = DBConnection()
     webhook_url = os.getenv("WEBHOOK_URL")  # Get the webhook URL from environment variables
     birthday_celebrator = HappyBirthday(db, webhook_url)
-    birthday_celebrator.send_birthday_wishes(args.date)
+    birthday_celebrator.send_birthday_wishes(args.date, args.notify_if_none)

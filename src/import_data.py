@@ -166,6 +166,15 @@ class PeopleForceDataImporter:
             page += 1  # Go to the next page
         print(f"Total holidays imported: {total_imported}")
 
+    def update_data_from_api(self):
+        # Update employees
+        self.import_employees()
+        # Update holiday policies
+        self.import_holiday_policies_from_api()
+        # Update all holidays
+        self.import_all_holidays_from_api()
+        logging.info("Data update from PeopleForce API completed successfully")
+
 if __name__ == '__main__':
     importer = PeopleForceDataImporter()
     importer.import_employees()

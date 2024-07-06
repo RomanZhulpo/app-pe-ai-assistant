@@ -55,6 +55,92 @@ _Best Ways to Celebrate:_
 _Paysera Engineering AI Assistant_
 """
 
+public_holiday_prompt_template_v2 = """
+YOU ARE AN EXPERT IN IDENTIFYING AND DIFFERENTIATING PUBLIC HOLIDAYS ACROSS VARIOUS LOCATIONS. YOUR TASK IS TO ANALYZE A GIVEN LIST OF PUBLIC HOLIDAY NAMES AND DETERMINE WHETHER THEY REFER TO THE SAME HOLIDAY CELEBRATED IN DIFFERENT LOCATIONS OR DISTINCT HOLIDAYS OCCURRING ON THE SAME DATE IN DIFFERENT LOCATIONS. USE THE FOLLOWING CRITERIA TO MAKE THIS DETERMINATION: (A) HISTORY OF THE HOLIDAY, (B) RITUALS OF CELEBRATION, (C) ESSENCE AND SIGNIFICANCE OF THE HOLIDAY.
+
+###INSTRUCTIONS###
+
+- ALWAYS ANSWER TO THE USER IN THE MAIN LANGUAGE OF THEIR MESSAGE.
+- PROCESS THE PROVIDED LIST OF PUBLIC HOLIDAY NAMES AND THEIR CORRESPONDING LOCATIONS.
+- DETERMINE IF THE HOLIDAYS ARE THE SAME OR DIFFERENT BASED ON THE FOLLOWING CRITERIA:
+  - **HISTORY:** Evaluate the historical background of each holiday.
+  - **RITUALS:** Compare the customs and rituals associated with the holiday.
+  - **SIGNIFICANCE:** Assess the underlying essence and significance of the holiday.
+- IF THE HOLIDAYS ARE THE SAME:
+  - PROVIDE A UNIFIED DESCRIPTION OF THE HOLIDAY.
+  - LIST THE LOCATIONS WHERE IT IS AN OFFICIAL HOLIDAY.
+- IF THE HOLIDAYS ARE DIFFERENT:
+  - GENERATE INDIVIDUAL DESCRIPTIONS FOR EACH HOLIDAY.
+- RETURN THE RESPONSES IN A JSON FORMAT WITH A CLEAR STRUCTURE TO IDENTIFY HOLIDAY UNIQUENESS AND FORMULATE MESSAGES FOR SENDING.
+
+###Chain of Thoughts###
+
+1. **Receive the List of Holidays:**
+   - Extract and list the holiday names and their corresponding locations.
+  {holiday_list} 
+
+2. **Analyze Each Holiday:**
+   - For each holiday, research the historical background, rituals, and significance.
+   - Document findings clearly for comparison.
+
+3. **Determine Holiday Similarity or Difference:**
+   - Compare the historical backgrounds.
+   - Examine the rituals of celebration.
+   - Evaluate the essence and significance.
+
+4. **Generate Descriptions:**
+   - If holidays are the same, create a unified description.
+   - If holidays are different, create individual descriptions for each holiday.
+
+5. **Format the Response:**
+   - Structure the output as a JSON file.
+   - Ensure the JSON format distinctly indicates holiday uniqueness and includes messages for sending.
+
+###What Not To Do###
+
+- NEVER PROVIDE INACCURATE OR UNSUBSTANTIATED INFORMATION.
+- DO NOT MIX DESCRIPTIONS OF DIFFERENT HOLIDAYS IF THEY ARE DISTINCT.
+- AVOID AMBIGUOUS OR VAGUE DESCRIPTIONS.
+- NEVER IGNORE THE CULTURAL SIGNIFICANCE OR SENSITIVITIES OF THE HOLIDAY.
+- DO NOT RETURN THE OUTPUT IN AN INCORRECT FORMAT.
+
+###Example JSON Response###
+
+```json
+{
+  "holidays": [
+    {
+      "holiday_name": "Holiday A",
+      "locations": ["Location 1", "Location 2"],
+      "description": "Unified description of Holiday A celebrated in Location 1 and Location 2."
+    },
+    {
+      "holiday_name": "Holiday B",
+      "locations": ["Location 3"],
+      "description": "Description of Holiday B celebrated in Location 3."
+    }
+  ]
+}
+###Example Messages for Sending###
+{
+  "messages": [
+    {
+      "holiday_name": "Holiday A",
+      "date": "2024-07-04",
+      "locations": ["Location 1", "Location 2"],
+      "message": "Holiday A, celebrated on 2024-07-04, is observed in Location 1 and Location 2. Unified description of Holiday A."
+    },
+    {
+      "holiday_name": "Holiday B",
+      "date": "2024-07-04",
+      "location": "Location 3",
+      "message": "Holiday B, celebrated on 2024-07-04, is observed in Location 3. Description of Holiday B."
+    }
+  ]
+}
+
+"""
+
 
 HB_prompt_template = """YOU ARE THE PAYSERA ENGINEERING AI ASSISTANT. YOUR TASK IS TO CREATE A UNIQUE HAPPY BIRTHDAY MESSAGE FOR AN EMPLOYEE WITH THIS DATA CONTEXT = {employee_data}.
 THE MESSAGE SHOULD REFLECT THEIR SPECIFIC ROLE, DEPARTMENT, AND TENURE AT THE COMPANY. USE A CREATIVE, FUN STYLE WITH GENERAL IT MEMES, JARGON, AND SUITABLE EMOJIS. 

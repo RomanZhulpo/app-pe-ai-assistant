@@ -1,20 +1,15 @@
 import datetime
-import os
-import sys
-from dotenv import load_dotenv
 import logging
+import os
+from dotenv import load_dotenv
 from pathlib import Path
-
-# Set up project root path
-project_root = Path(__file__).resolve().parents[1]
-sys.path.append(str(project_root))
-
-# Import custom modules
 from db_functions import DBConnection
 from google_space_webhook import GoogleChatWebhook
 from logging_config import setup_logging
-from prompt_templates import public_holiday_prompt_template
+from prompt_templates import public_holiday_prompt_template, public_holiday_prompt_template_v2
 from openai_api import OpenAI_API
+import json
+import re
 
 # Load environment variables and setup logging
 load_dotenv()
@@ -48,11 +43,52 @@ class PublicHoliday:
             return holidays_info
         except Exception as e:
             logging.error("Error finding holidays", exc_info=True)
-            return None  # Return None to indicate an error
+            return []  # Return empty list instead of None
+
+    def determine_holiday_similarity(self, holidays):
+        if not holidays:
+            logging.info("No holidays to check for similarity.")
+            return None
+        
+        logging.debug(f"Holiday list for similarity check: {holidays}")
+
+        # Преобразуем список праздников в строку
+        holidays_str = json.dumps(holidays, indent=2)
+        
+        # Формируем запрос для OpenAI
+        try:
+            # Используем простую конкатенацию строк вместо format
+            prompt = public_holiday_prompt_template_v2 + "\n\nHoliday list:\n" + holidays_str
+            logging.debug(f"Generated prompt for OpenAI: {prompt}")
+        except Exception as e:
+            logging.error(f"Error creating prompt: {e}", exc_info=True)
+            return None
+
+        # Отправляем запрос в OpenAI API
+        prompt_data = [{"role": "user", "content": prompt}]
+        try:
+            response = self.api.chat_completion(prompt_data)
+        except Exception as e:
+            logging.error(f"Error calling OpenAI API: {e}")
+            return None
+
+        logging.debug(f"AI response for holiday similarity: {response}")
+
+        # Проверяем и возвращаем ответ
+        if 'choices' in response and response['choices'] and 'message' in response['choices'][0] and 'content' in response['choices'][0]['message']:
+            return response['choices'][0]['message']['content']
+        else:
+            logging.error("AI did not return a valid response for holiday similarity")
+            return None
+
+    def _check_api_response(self, response):
+        if 'choices' in response and response['choices'] and 'message' in response['choices'][0] and 'content' in response['choices'][0]['message']:
+            return response['choices'][0]['message']['content']
+        else:
+            logging.error("API did not return a valid response or missing 'content'")
+            return None
 
     def generate_holiday_message(self, date=None):
-        if date is None:
-            date = datetime.datetime.now().strftime('%Y-%m-%d')  # Default to today's date
         holidays = self.find_holidays(date)
         if holidays is None:
             message = "Error occurred while finding holidays."
@@ -63,28 +99,41 @@ class PublicHoliday:
             logging.info(message)
             return message
 
+        similarity_response = self.determine_holiday_similarity(holidays)
+        if similarity_response is None:
+            return "Error in determining holiday similarity."
+
+        try:
+            # Извлекаем JSON из ответа OpenAI
+            json_match = re.search(r'```json\n(.*?)\n```', similarity_response, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1)
+                similarity_data = json.loads(json_str)
+            else:
+                raise ValueError("No JSON found in the response")
+
+            if 'holidays' not in similarity_data:
+                raise KeyError("'holidays' key not found in similarity data")
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            logging.error(f"Error processing holiday similarity response: {e}", exc_info=True)
+            return "Error in processing holiday similarity response."
+
+        logging.debug(f"Similarity data: {similarity_data}")
+
         messages = []
-        for holiday in holidays:
-            # Format the prompt using the template and holiday data
+        for holiday in similarity_data['holidays']:
+            locations = ', '.join(holiday['locations'])
             prompt = public_holiday_prompt_template.format(
-                holiday_date=holiday['holiday_date'],
+                holiday_date=holidays[0]['holiday_date'],
                 holiday_name=holiday['holiday_name'],
-                location_name=holiday['location_name'],
-                location_code=holiday['location_code']
+                location_name=locations,
+                location_code=''  # Not needed as we list all locations
             )
             prompt_data = [{"role": "user", "content": prompt}]
             response = self.api.chat_completion(prompt_data)
-            logging.debug(f"API response: {response}")  # Log the full API response
+            logging.debug(f"API response: {response}")
 
-            if 'choices' in response and response['choices'] and 'message' in response['choices'][0] and 'content' in response['choices'][0]['message']:
-                message_content = response['choices'][0]['message']['content']
-                message = message_content
-            else:
-                message = "Error in generating message."
-                logging.error("API did not return a valid response or missing 'content'")
-
-            logging.debug(f"Generated message for {holiday['holiday_name']} on {holiday['holiday_date']}: {message}")
-
+            message = self._check_api_response(response)
             if not isinstance(message, str):
                 logging.error("Generated message is not a string")
                 continue
@@ -115,7 +164,7 @@ if __name__ == "__main__":
     db = DBConnection()
     webhook_url = os.getenv("WEBHOOK_URL")  # Get the webhook URL from environment variables
     public_holiday = PublicHoliday(db, webhook_url)
-    specific_date = '2024-06-06'
+    specific_date = '2024-06-17' 
     responses = public_holiday.generate_and_send_holiday_message(specific_date)
     if responses:
         for response in responses:

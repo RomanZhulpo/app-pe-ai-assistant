@@ -22,7 +22,8 @@ class PublicHoliday:
         self.api = OpenAI_API()  # Initialize OpenAI API
         logging.info("PublicHoliday initialized with given database connection, webhook URL, and OpenAI API.")
 
-    def find_holidays(self, date=None):
+    def find_holidays(self, date=None):  # type: (str | None) -> list[dict] | None
+        logging.debug(f"find_holidays called with date: {date}")
         if date is None:
             date = datetime.datetime.now().strftime('%Y-%m-%d')  # Default to today's date
         logging.info(f"Searching for public holidays on: {date}")
@@ -52,19 +53,19 @@ class PublicHoliday:
         
         logging.debug(f"Holiday list for similarity check: {holidays}")
 
-        # Преобразуем список праздников в строку
+        # Convert the list of holidays to a string
         holidays_str = json.dumps(holidays, indent=2)
         
-        # Формируем запрос для OpenAI
+        # Form the request for OpenAI
         try:
-            # Используем простую конкатенацию строк вместо format
+            # Use simple string concatenation instead of format
             prompt = public_holiday_prompt_template_v2 + "\n\nHoliday list:\n" + holidays_str
             logging.debug(f"Generated prompt for OpenAI: {prompt}")
         except Exception as e:
             logging.error(f"Error creating prompt: {e}", exc_info=True)
             return None
 
-        # Отправляем запрос в OpenAI API
+        # Send the request to OpenAI API
         prompt_data = [{"role": "user", "content": prompt}]
         try:
             response = self.api.chat_completion(prompt_data)
@@ -74,7 +75,7 @@ class PublicHoliday:
 
         logging.debug(f"AI response for holiday similarity: {response}")
 
-        # Проверяем и возвращаем ответ
+        # Check and return the response
         if 'choices' in response and response['choices'] and 'message' in response['choices'][0] and 'content' in response['choices'][0]['message']:
             return response['choices'][0]['message']['content']
         else:
@@ -88,10 +89,14 @@ class PublicHoliday:
             logging.error("API did not return a valid response or missing 'content'")
             return None
 
-    def generate_holiday_message(self, date=None):
+    def generate_holiday_message(self, date=None):  # type: (str | None) -> list[str] | str
+        logging.debug(f"generate_holiday_message called with date: {date}")
+        if date is None:
+            date = datetime.datetime.now().strftime('%Y-%m-%d')
+        
         holidays = self.find_holidays(date)
         if holidays is None:
-            message = "Error occurred while finding holidays."
+            message = f"Error occurred while finding holidays for date: {date}"
             logging.error(message)
             return message
         if not holidays:

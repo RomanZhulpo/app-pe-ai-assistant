@@ -38,7 +38,7 @@ class OpenAI_API:
         logger.debug(f"Received response: {response.status_code} - {response.text}")
         return response.json()  # Return the response as JSON
 
-    def chat_completion(self, messages, model="gpt-4-turbo", temperature=0.7):
+    def chat_completion(self, messages, model="gpt-4o-mini", temperature=0.7):
         # Generate text completion using OpenAI's GPT model
         data = {
             'model': model,
